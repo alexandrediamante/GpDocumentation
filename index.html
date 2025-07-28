@@ -4,88 +4,292 @@
   <meta charset="UTF-8">
   <title>Gerador de Release Notes GP</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f0f2f5; }
-    h2 { color: #1a73e8; }
-    label { display: block; margin-top: 10px; }
-    select, textarea, input { width: 100%; padding: 8px; margin-top: 5px; }
-    button { margin-top: 20px; padding: 10px 20px; background: #1a73e8; color: white; border: none; cursor: pointer; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: #f0f2f5; }
+    .container { max-width: 900px; margin: 20px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h2, h3 { color: #1a73e8; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
+    label { display: block; margin-top: 15px; font-weight: bold; color: #333; }
+    select, textarea, input { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+    button { margin-top: 20px; padding: 10px 20px; background: #1a73e8; color: white; border: none; cursor: pointer; border-radius: 4px; font-size: 16px; transition: background-color 0.2s; }
     button:hover { background: #155ab6; }
-    .item { border: 1px solid #ccc; padding: 10px; margin-top: 10px; background: white; }
-    #output { white-space: pre-wrap; background: #fff; padding: 20px; margin-top: 20px; border: 1px solid #ccc; }
+    .item, .history-version { border: 1px solid #ddd; padding: 15px; margin-top: 15px; background: #fafafa; border-radius: 4px; }
+    #output { white-space: pre-wrap; background: #e8f0fe; padding: 20px; margin-top: 20px; border: 1px solid #ccc; border-radius: 4px; font-family: 'Courier New', Courier, monospace; }
+    .tabs { display: flex; border-bottom: 1px solid #ccc; }
+    .tab-button { padding: 10px 20px; cursor: pointer; background: #f0f2f5; border: none; border-bottom: 3px solid transparent; font-size: 1rem; }
+    .tab-button.active { font-weight: bold; border-bottom: 3px solid #1a73e8; background: white; }
+    .tab-content { display: none; padding-top: 20px; }
+    .tab-content.active { display: block; }
+    .delete-item-btn { color: #e53935; cursor: pointer; font-weight: bold; margin-left: 10px; display: inline-block; padding: 2px 5px; border-radius: 4px; }
+    .delete-item-btn:hover { background-color: #ffcdd2; }
+    .button-group { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* Estilos para o modo de visualização */
+    .view-mode .admin-only {
+        display: none !important;
+    }
   </style>
 </head>
 <body>
 
-<h2>📝 Gerador de Release Notes - GP.EXE</h2>
+<div class="container">
+  <!-- As abas e o gerador são visíveis apenas no modo de administrador -->
+  <div class="tabs admin-only">
+    <button class="tab-button active" onclick="showTab('gerador')">📝 Gerador</button>
+    <button class="tab-button" onclick="showTab('historico')">📚 Histórico</button>
+  </div>
 
-<label for="versao">Versão:</label>
-<input type="text" id="versao" placeholder="Ex: 3.0.401.0">
+  <div id="gerador" class="tab-content active admin-only">
+    <h2>📝 Gerador de Release Notes - GP.EXE</h2>
+    
+    <label for="versao">Versão:</label>
+    <input type="text" id="versao" placeholder="Ex: 3.0.401.0">
 
-<label for="data">Data de Liberação:</label>
-<input type="date" id="data">
+    <label for="data">Data de Liberação:</label>
+    <input type="date" id="data">
 
-<label for="tipo">Tipo de Release:</label>
-<select id="tipo">
-  <option value="Master Stable Release">Release Estável</option>
-  <option value="Hotfix">Hotfix / Correção</option>
-  <option value="Melhoria">Melhoria</option>
-  <option value="Feature Release">Novas Funcionalidades</option>
-</select>
-
-<div id="itens-container">
-  <h3>📋 Itens</h3>
-</div>
-<button onclick="adicionarItem()">➕ Adicionar Item</button>
-
-<button onclick="gerarHTML()">🚀 Gerar HTML</button>
-
-<h3>📄 HTML Gerado:</h3>
-<div id="output"></div>
-
-<script>
-let contador = 0;
-
-function adicionarItem() {
-  contador++;
-  const container = document.getElementById('itens-container');
-  const div = document.createElement('div');
-  div.className = 'item';
-  div.innerHTML = `
-    <label>Tipo:</label>
-    <select id="tipo_${contador}">
-      <option value="Feature">Nova Funcionalidade</option>
-      <option value="Bug">Correção de Bug</option>
-      <option value="Ajuste">Melhoria / Ajuste</option>
+    <label for="tipo">Tipo de Release:</label>
+    <select id="tipo">
+      <option value="Master Stable Release">Release Estável</option>
+      <option value="Hotfix">Hotfix / Correção</option>
+      <option value="Melhoria">Melhoria</option>
+      <option value="Feature Release">Novas Funcionalidades</option>
     </select>
-    <label>Título:</label>
-    <input type="text" id="titulo_${contador}" placeholder="Ex: Feature #12345 - Nova tela de vínculos">
-    <label>Descrição:</label>
-    <textarea id="descricao_${contador}" rows="4" placeholder="Descreva aqui..."></textarea>
-  `;
-  container.appendChild(div);
-}
 
-function gerarHTML() {
-  const versao = document.getElementById('versao').value;
-  const data = document.getElementById('data').value;
-  const tipo = document.getElementById('tipo').value;
+    <div id="itens-container">
+      <h3>📋 Itens da Versão</h3>
+    </div>
+    <button onclick="adicionarItem()">➕ Adicionar Item</button>
+    <hr>
+    <div class="button-group">
+      <button onclick="gerarHTML()">🚀 Gerar HTML</button>
+      <button onclick="salvarVersao()">💾 Salvar Versão</button>
+    </div>
+    
+    <h3>📄 HTML Gerado:</h3>
+    <div id="output"></div>
+  </div>
 
-  let html = `<h2>♻️ Nova versão de produção <strong>${versao}</strong> – ${tipo}</h2>`;
-  html += `<p><strong>📅 Data da Liberação:</strong> ${data}</p>`;
-  html += `<p><strong>🧾 Versão do Executável:</strong> gp.exe</p>`;
-  html += `<hr><h3>✅ Itens incluídos nesta versão:</h3>`;
+  <!-- O histórico é visível em ambos os modos -->
+  <div id="historico" class="tab-content">
+    <h2>📚 Histórico de Versões</h2>
+    <div id="history-container">
+      <p>Carregando histórico...</p>
+    </div>
+  </div>
+</div>
 
-  for (let i = 1; i <= contador; i++) {
-    const tipoItem = document.getElementById(`tipo_${i}`).value;
-    const titulo = document.getElementById(`titulo_${i}`).value;
-    const desc = document.getElementById(`descricao_${i}`).value.replace(/\n/g, '<br>');
+<script type="module">
+  // 1. IMPORTAÇÕES DO FIREBASE
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { 
+    getFirestore, collection, addDoc, getDocs, query, orderBy, doc, getDoc, updateDoc 
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    let icone = tipoItem === "Feature" ? "🔹" : tipoItem === "Bug" ? "🔸" : "🛠️";
-    html += `<p>${icone} <strong>${titulo}</strong><br>${desc}</p>`;
+  // 2. CONFIGURAÇÃO DO FIREBASE
+  const firebaseConfig = {
+    apiKey: "AIzaSyDK34Eirz7vutvXQo9gwQlNM4mi_7YtBrE",
+    authDomain: "gp-exe.firebaseapp.com",
+    projectId: "gp-exe",
+    storageBucket: "gp-exe.appspot.com",
+    messagingSenderId: "333935319850",
+    appId: "1:333935319850:web:94075ae2fe0b68978c1c53",
+    measurementId: "G-JYQB1Q90VX"
+  };
+
+  // 3. INICIALIZAÇÃO
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const versoesCollection = collection(db, "versoes");
+  const SENHA_MESTRA = "gpsemtreta";
+  let contador = 0;
+
+  // --- LÓGICA DE MODO DE VISUALIZAÇÃO ---
+  const isViewMode = window.location.hash === '#view';
+
+  // --- FUNÇÃO DE VERIFICAÇÃO DE SENHA ---
+  function verificarSenha() {
+    const senhaInserida = prompt("Para executar esta ação, por favor, insira a senha:");
+    if (senhaInserida !== SENHA_MESTRA) {
+        if (senhaInserida !== null) {
+            alert("Senha incorreta!");
+        }
+        return false;
+    }
+    return true;
   }
 
-  document.getElementById('output').innerHTML = html;
-}
+  // --- LÓGICA DAS ABAS ---
+  window.showTab = function(tabName) {
+    if (isViewMode) return; // Impede a troca de abas no modo de visualização
+
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    
+    document.getElementById(tabName).classList.add('active');
+    document.querySelector(`button[onclick="showTab('${tabName}')"]`).classList.add('active');
+
+    if (tabName === 'historico') {
+      carregarHistorico();
+    }
+  }
+
+  // --- LÓGICA DO GERADOR ---
+  window.adicionarItem = function() {
+    contador++;
+    const container = document.getElementById('itens-container');
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.id = `item_novo_${contador}`;
+    div.innerHTML = `
+      <label>Tipo:</label>
+      <select id="tipo_novo_${contador}">
+        <option value="Feature">Nova Funcionalidade</option>
+        <option value="Bug">Correção de Bug</option>
+        <option value="Ajuste">Melhoria / Ajuste</option>
+      </select>
+      <label>Título:</label>
+      <input type="text" id="titulo_novo_${contador}" placeholder="Ex: Feature #12345 - Nova tela de vínculos">
+      <label>Descrição:</label>
+      <textarea id="descricao_novo_${contador}" rows="4" placeholder="Descreva aqui..."></textarea>
+    `;
+    container.appendChild(div);
+  }
+
+  function getDadosFormulario() {
+    const versao = document.getElementById('versao').value;
+    const data = document.getElementById('data').value;
+    const tipoRelease = document.getElementById('tipo').value;
+
+    const itens = [];
+    for (let i = 1; i <= contador; i++) {
+        if(document.getElementById(`item_novo_${i}`)){
+            const tipoItem = document.getElementById(`tipo_novo_${i}`).value;
+            const titulo = document.getElementById(`titulo_novo_${i}`).value;
+            const desc = document.getElementById(`descricao_novo_${i}`).value;
+            itens.push({ tipo: tipoItem, titulo: titulo, descricao: desc });
+        }
+    }
+    return { versao, data, tipoRelease, itens, timestamp: new Date() };
+  }
+
+  window.gerarHTML = function() {
+    const dados = getDadosFormulario();
+    let html = `<h2>♻️ Nova versão de produção <strong>${dados.versao || '?.?.?.?'}</strong> – ${dados.tipoRelease}</h2>`;
+    html += `<p><strong>📅 Data da Liberação:</strong> ${dados.data || 'Não definida'}</p>`;
+    html += `<p><strong>🧾 Versão do Executável:</strong> gp.exe</p>`;
+    html += `<hr><h3>✅ Itens incluídos nesta versão:</h3>`;
+
+    dados.itens.forEach(item => {
+      const icone = item.tipo === "Feature" ? "🔹" : item.tipo === "Bug" ? "🔸" : "🛠️";
+      html += `<p>${icone} <strong>${item.titulo}</strong><br>${item.descricao.replace(/\n/g, '<br>')}</p>`;
+    });
+
+    document.getElementById('output').innerHTML = html;
+  }
+  
+  // --- FUNÇÕES DE BANCO DE DADOS ---
+
+  window.salvarVersao = async function() {
+    if (!verificarSenha()) return;
+
+    const dados = getDadosFormulario();
+    if (!dados.versao || !dados.data || dados.itens.length === 0) {
+      alert("Por favor, preencha a Versão, a Data e adicione pelo menos um item.");
+      return;
+    }
+
+    try {
+      await addDoc(versoesCollection, dados);
+      alert(`Versão ${dados.versao} salva com sucesso!`);
+      document.getElementById('versao').value = '';
+      document.getElementById('data').valueAsDate = new Date();
+      document.getElementById('itens-container').innerHTML = '<h3>📋 Itens da Versão</h3>';
+      document.getElementById('output').innerHTML = '';
+      contador = 0;
+    } catch (error) {
+      console.error("Erro ao salvar a versão: ", error);
+      alert("Ocorreu um erro ao salvar a versão.");
+    }
+  }
+
+  async function carregarHistorico() {
+    const historyContainer = document.getElementById('history-container');
+    historyContainer.innerHTML = '<p>Carregando histórico...</p>';
+
+    try {
+      const q = query(versoesCollection, orderBy("timestamp", "desc"));
+      const snapshot = await getDocs(q);
+      
+      if (snapshot.empty) {
+        historyContainer.innerHTML = '<p>Nenhuma versão encontrada no histórico.</p>';
+        return;
+      }
+      
+      let html = '';
+      snapshot.forEach(docSnapshot => {
+        const versao = docSnapshot.data();
+        const versaoId = docSnapshot.id;
+        
+        html += `<div class="history-version">`;
+        html += `<h3>Versão: ${versao.versao} (${versao.tipoRelease}) - ${versao.data}</h3>`;
+        if (versao.itens && versao.itens.length > 0) {
+            versao.itens.forEach((item, index) => {
+              const icone = item.tipo === "Feature" ? "🔹" : item.tipo === "Bug" ? "🔸" : "🛠️";
+              html += `<p>${icone} <strong>${item.titulo}</strong><br>${item.descricao.replace(/\n/g, '<br>')}`;
+              // Adiciona o botão de deletar apenas se NÃO estiver no modo de visualização
+              if (!isViewMode) {
+                html += ` <span class="delete-item-btn" onclick="deletarItem('${versaoId}', ${index})">❌</span>`;
+              }
+              html += `</p>`;
+            });
+        } else {
+            html += `<p>Nenhum item nesta versão.</p>`;
+        }
+        html += `</div>`;
+      });
+      historyContainer.innerHTML = html;
+
+    } catch (error) {
+      console.error("Erro ao carregar o histórico: ", error);
+      historyContainer.innerHTML = '<p>Erro ao carregar o histórico. Verifique o console.</p>';
+    }
+  }
+  window.carregarHistorico = carregarHistorico;
+
+  window.deletarItem = async function(versaoId, itemIndex) {
+    if (!verificarSenha()) return;
+    if (!confirm("Tem certeza que deseja deletar este item? Esta ação não pode ser desfeita.")) return;
+
+    try {
+      const docRef = doc(db, "versoes", versaoId);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        alert("Erro: Versão não encontrada.");
+        return;
+      }
+      let dadosDaVersao = docSnap.data();
+      dadosDaVersao.itens.splice(itemIndex, 1);
+      await updateDoc(docRef, { itens: dadosDaVersao.itens });
+      alert("Item deletado com sucesso!");
+      carregarHistorico();
+    } catch (error) {
+      console.error("Erro ao deletar o item: ", error);
+      alert("Ocorreu um erro ao deletar o item.");
+    }
+  }
+
+  // --- INICIALIZAÇÃO DA PÁGINA ---
+  document.addEventListener('DOMContentLoaded', () => {
+    if (isViewMode) {
+        document.body.classList.add('view-mode');
+        document.getElementById('historico').style.display = 'block';
+        document.getElementById('gerador').style.display = 'none';
+        carregarHistorico();
+    } else {
+        document.getElementById('data').valueAsDate = new Date();
+        showTab('gerador');
+    }
+  });
+
 </script>
 
 </body>

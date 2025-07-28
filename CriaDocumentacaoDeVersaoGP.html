@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Gerador de Release Notes GP</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f0f2f5; }
+    h2 { color: #1a73e8; }
+    label { display: block; margin-top: 10px; }
+    select, textarea, input { width: 100%; padding: 8px; margin-top: 5px; }
+    button { margin-top: 20px; padding: 10px 20px; background: #1a73e8; color: white; border: none; cursor: pointer; }
+    button:hover { background: #155ab6; }
+    .item { border: 1px solid #ccc; padding: 10px; margin-top: 10px; background: white; }
+    #output { white-space: pre-wrap; background: #fff; padding: 20px; margin-top: 20px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+
+<h2>📝 Gerador de Release Notes - GP.EXE</h2>
+
+<label for="versao">Versão:</label>
+<input type="text" id="versao" placeholder="Ex: 3.0.401.0">
+
+<label for="data">Data de Liberação:</label>
+<input type="date" id="data">
+
+<label for="tipo">Tipo de Release:</label>
+<select id="tipo">
+  <option value="Master Stable Release">Release Estável</option>
+  <option value="Hotfix">Hotfix / Correção</option>
+  <option value="Melhoria">Melhoria</option>
+  <option value="Feature Release">Novas Funcionalidades</option>
+</select>
+
+<div id="itens-container">
+  <h3>📋 Itens</h3>
+</div>
+<button onclick="adicionarItem()">➕ Adicionar Item</button>
+
+<button onclick="gerarHTML()">🚀 Gerar HTML</button>
+
+<h3>📄 HTML Gerado:</h3>
+<div id="output"></div>
+
+<script>
+let contador = 0;
+
+function adicionarItem() {
+  contador++;
+  const container = document.getElementById('itens-container');
+  const div = document.createElement('div');
+  div.className = 'item';
+  div.innerHTML = `
+    <label>Tipo:</label>
+    <select id="tipo_${contador}">
+      <option value="Feature">Nova Funcionalidade</option>
+      <option value="Bug">Correção de Bug</option>
+      <option value="Ajuste">Melhoria / Ajuste</option>
+    </select>
+    <label>Título:</label>
+    <input type="text" id="titulo_${contador}" placeholder="Ex: Feature #12345 - Nova tela de vínculos">
+    <label>Descrição:</label>
+    <textarea id="descricao_${contador}" rows="4" placeholder="Descreva aqui..."></textarea>
+  `;
+  container.appendChild(div);
+}
+
+function gerarHTML() {
+  const versao = document.getElementById('versao').value;
+  const data = document.getElementById('data').value;
+  const tipo = document.getElementById('tipo').value;
+
+  let html = `<h2>♻️ Nova versão de produção <strong>${versao}</strong> – ${tipo}</h2>`;
+  html += `<p><strong>📅 Data da Liberação:</strong> ${data}</p>`;
+  html += `<p><strong>🧾 Versão do Executável:</strong> gp.exe</p>`;
+  html += `<hr><h3>✅ Itens incluídos nesta versão:</h3>`;
+
+  for (let i = 1; i <= contador; i++) {
+    const tipoItem = document.getElementById(`tipo_${i}`).value;
+    const titulo = document.getElementById(`titulo_${i}`).value;
+    const desc = document.getElementById(`descricao_${i}`).value.replace(/\n/g, '<br>');
+
+    let icone = tipoItem === "Feature" ? "🔹" : tipoItem === "Bug" ? "🔸" : "🛠️";
+    html += `<p>${icone} <strong>${titulo}</strong><br>${desc}</p>`;
+  }
+
+  document.getElementById('output').innerHTML = html;
+}
+</script>
+
+</body>
+</html>

@@ -254,7 +254,8 @@
     }
   }
 
-  window.deletarVersão = async function(versaoId) {
+  // CORREÇÃO APLICADA AQUI
+  window.deletarVersao = async function(versaoId) {
     if (!verificarSenha()) return;
     if (!confirm("TEM CERTEZA ABSOLUTA? Você está prestes a deletar a versão inteira.")) return;
     try {
